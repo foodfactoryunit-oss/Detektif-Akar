@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Detektif Akar Masalah</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: satu kolom tengah (maks 960px), layar-layar kaca bertumpuk di atas latar neon bermotif titik dan garis diagonal */
+:root{
+  --bg:#0E0928; --bg2:#1A1046;
+  --glass:rgba(255,255,255,.085); --glass2:rgba(255,255,255,.15); --line:rgba(255,255,255,.2);
+  --tx:#F6F3FF; --mute:#BDB4E6;
+  --lime:#C8FF3E; --pink:#FF4FA3; --cyan:#35E3F0; --violet:#8A6BFF; --amber:#FFB938; --red:#FF5470; --mint:#5CF2B4;
+  --ink:#140B33;
+  --f-d:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --f-b:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 var(--f-b);overflow-x:hidden;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+button,input{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--f-d);margin:0;line-height:1.08;text-wrap:balance}
+p{margin:0}
+.muted{color:var(--mute)}
+
+/* ===== latar bermotif ===== */
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;
+  background:
+    radial-gradient(rgba(255,255,255,.10) 1.2px,transparent 1.5px) 0 0/24px 24px,
+    repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 22px),
+    linear-gradient(160deg,var(--bg2),var(--bg) 60%)}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;animation:float 16s ease-in-out infinite}
+.b1{width:46vmax;height:46vmax;left:-14vmax;top:-12vmax;background:var(--violet)}
+.b2{width:38vmax;height:38vmax;right:-12vmax;top:22vh;background:var(--pink);animation-delay:-5s;opacity:.4}
+.b3{width:34vmax;height:34vmax;left:18vw;bottom:-16vmax;background:var(--cyan);animation-delay:-9s;opacity:.3}
+@keyframes float{50%{transform:translate(4vmax,3vmax) scale(1.08)}}
+
+/* ===== kerangka ===== */
+.app{max-width:960px;margin:0 auto;padding-block:14px 8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.screen{display:flex;flex-direction:column;gap:14px}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:18px;
+  -webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:0 12px 40px rgba(6,2,30,.45),inset 0 1px 0 rgba(255,255,255,.2)}
+.inner{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:14px}
+.chip-tag{display:inline-block;align-self:flex-start;font:800 11px/1 var(--f-d);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);background:var(--lime);padding:7px 11px;border-radius:99px}
+.eyebrow{font:800 11px/1.2 var(--f-d);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+.hl{background:linear-gradient(90deg,var(--lime),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.foot{text-align:center;color:var(--mute);font-size:12px;letter-spacing:.04em;padding:18px 0 10px}
+
+/* ===== tombol ===== */
+.btn{appearance:none;cursor:pointer;border:2px solid var(--ink);background:var(--lime);color:var(--ink);font:800 15px/1 var(--f-d);padding:13px 20px;border-radius:15px;
+  box-shadow:0 5px 0 rgba(0,0,0,.4);transition:transform .08s,box-shadow .08s,filter .15s}
+.btn:hover{filter:brightness(1.07)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.4)}
+.btn.ghost{background:var(--glass2);color:var(--tx);border:1px solid var(--line);box-shadow:none}
+.btn.ghost:active{transform:scale(.97)}
+.btn.big{font-size:18px;padding:17px 26px;background:linear-gradient(90deg,var(--lime),var(--mint))}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.pulse{animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 5px 0 rgba(0,0,0,.4),0 0 0 9px rgba(200,255,62,.18)}}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;align-items:center}
+.iconbtn{position:relative;display:grid;place-items:center;width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--glass2);cursor:pointer;color:var(--tx)}
+.iconbtn svg{width:20px;height:20px}
+.iconbtn.off{color:var(--mute)}
+.iconbtn.off::after{content:"";position:absolute;width:24px;height:2.5px;background:var(--red);border-radius:2px;transform:rotate(-45deg)}
+svg.i{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.12em}
+
+/* ===== gateway & briefing ===== */
+.hero{display:flex;flex-direction:column;gap:16px}
+.hero h1{font-size:clamp(34px,8vw,60px);font-weight:800}
+.lead{font-size:clamp(15px,2.4vw,17px);color:#E4DEFF;max-width:62ch}
+.why{background:linear-gradient(135deg,rgba(255,79,163,.22),rgba(138,107,255,.2));border:1px solid rgba(255,255,255,.25);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.why-h{font:800 11px/1 var(--f-d);letter-spacing:.14em;color:var(--lime)}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.vs>div{border-radius:14px;padding:10px;text-align:center;display:flex;flex-direction:column}
+.vs b{font:800 clamp(28px,7vw,40px)/1 var(--f-d)}
+.vs span{font-size:12px;color:var(--mute)}
+.vs-a{background:rgba(92,242,180,.14);border:1px solid rgba(92,242,180,.5)}
+.vs-b{background:rgba(255,84,112,.16);border:1px solid rgba(255,84,112,.6)}
+.vs-x{font:800 13px var(--f-d);color:var(--mute);padding:0 !important}
+.why small{color:var(--mute)}
+.nameform{display:flex;flex-direction:column;gap:8px}
+.nameform label{font:700 13px var(--f-d);letter-spacing:.06em;text-transform:uppercase;color:var(--cyan)}
+.nameform .row{display:flex;gap:10px;flex-wrap:wrap}
+.nameform input{flex:1 1 200px;min-width:0;background:rgba(10,5,35,.55);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;font-size:16px;outline:none}
+.nameform input:focus{border-color:var(--lime);box-shadow:0 0 0 4px rgba(200,255,62,.15)}
+.err{color:#FFB3C0;font-size:13px}
+.shake{animation:shake .35s}
+@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.grid2 h3{font-size:16px;margin-bottom:10px;color:var(--lime)}
+.grid2 ol,.grid2 ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:7px;font-size:14px}
+.rules{list-style:none;padding-left:0 !important}
+.rules li{display:flex;gap:9px;align-items:flex-start}
+.rules li::before{content:"";flex:0 0 8px;height:8px;margin-top:8px;border-radius:50%;background:var(--pink)}
+.curious{background:rgba(53,227,240,.12);border:1px dashed rgba(53,227,240,.6);border-radius:16px;padding:14px;font-weight:600}
+.switch{display:flex;gap:10px;align-items:center;cursor:pointer;font-size:14px}
+.switch input{width:20px;height:20px;accent-color:var(--lime);flex:0 0 20px}
+
+/* ===== HUD ===== */
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:18px}
+.hud-row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.hud-l,.hud-r{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--pink),var(--violet));font:800 16px var(--f-d);flex:0 0 34px}
+.uname{font:700 14px var(--f-d);max-width:30vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lv{font:800 11px/1 var(--f-d);letter-spacing:.06em;padding:6px 9px;border-radius:99px;background:rgba(255,255,255,.14);white-space:nowrap}
+.score{font:800 18px var(--f-d);color:var(--lime);font-variant-numeric:tabular-nums;min-width:4.4ch;text-align:right}
+.hearts{display:flex;gap:3px}
+.hearts svg{width:20px;height:20px;fill:var(--pink);stroke:none;transition:.2s}
+.hearts svg.off{fill:rgba(255,255,255,.2)}
+.tmr{display:flex;gap:4px;align-items:center;font:800 14px var(--f-d);font-variant-numeric:tabular-nums;padding:5px 9px;border-radius:99px;background:rgba(53,227,240,.18);color:var(--cyan)}
+.tmr.low{background:rgba(255,84,112,.25);color:#FFB3C0}
+.pwrap{display:flex;align-items:center;gap:10px}
+.pbar{flex:1;height:14px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;border:1px solid rgba(255,255,255,.15)}
+.pfill{height:100%;width:0;border-radius:99px;background:repeating-linear-gradient(135deg,var(--lime) 0 10px,var(--mint) 10px 20px);transition:width .6s cubic-bezier(.3,1.2,.4,1)}
+.ppct{font:800 13px var(--f-d);min-width:3.6ch;text-align:right;font-variant-numeric:tabular-nums}
+#stage{display:flex;flex-direction:column;gap:14px}
+
+/* ===== soal ===== */
+.qhead{display:flex;flex-direction:column;gap:9px}
+.qhead h2{font-size:clamp(21px,4.6vw,30px)}
+.story{background:rgba(255,185,56,.12);border-left:4px solid var(--amber);border-radius:10px;padding:10px 12px;font-size:14px}
+.story b{color:var(--amber)}
+.prompt{font-weight:700}
+.board{display:flex;flex-direction:column;gap:12px}
+.zone{--zc:var(--cyan);position:relative;border:2px dashed rgba(255,255,255,.32);border-radius:16px;background:rgba(255,255,255,.05);padding:9px;min-height:78px;min-width:0;display:flex;flex-direction:column;gap:5px;transition:border-color .15s,background .15s,transform .15s}
+.zone-h{font:800 11px/1.2 var(--f-d);letter-spacing:.07em;text-transform:uppercase;color:var(--zc);overflow-wrap:anywhere}
+.zone-s{font-size:11.5px;color:var(--mute);line-height:1.35}
+.zone-b{display:flex;flex-direction:column;gap:5px;min-width:0}
+.zone.over{border-color:var(--lime);background:rgba(200,255,62,.13);transform:scale(1.02)}
+.armed .zone{border-color:var(--cyan);animation:armed 1s ease-in-out infinite}
+@keyframes armed{50%{background:rgba(53,227,240,.14)}}
+.zone.bad{animation:shake .35s;border-color:var(--red)}
+.zone.good{border-style:solid;border-color:var(--lime)}
+.chip{background:rgba(200,255,62,.17);border:1px solid rgba(200,255,62,.5);border-radius:10px;padding:5px 8px;font-size:12px;line-height:1.3;overflow-wrap:anywhere;animation:pop .35s}
+.chip.x{background:rgba(255,84,112,.16);border-color:rgba(255,84,112,.55)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.07)}100%{transform:scale(1);opacity:1}}
+.fish{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.spine{grid-column:1/-1;display:flex;align-items:center;min-height:50px}
+.spine .line{flex:1;height:6px;border-radius:6px;background:linear-gradient(90deg,transparent,var(--cyan))}
+.spine .head{flex:0 1 46%;background:var(--pink);color:var(--ink);font:800 clamp(11px,2.6vw,14px)/1.15 var(--f-d);padding:9px 12px;border-radius:12px 26px 26px 12px;text-align:center}
+.zone.trash{--zc:var(--red);border-color:rgba(255,84,112,.55);background:rgba(255,84,112,.07);min-height:64px}
+.buckets{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.slots{display:flex;flex-direction:column;gap:8px}
+.slot{display:flex;gap:10px;align-items:stretch}
+.slot .num{flex:0 0 32px;height:32px;margin-top:8px;border-radius:50%;display:grid;place-items:center;background:var(--violet);font:800 14px var(--f-d)}
+.slot .zone{flex:1}
+.tray-h{font:800 12px var(--f-d);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.tray{display:flex;flex-wrap:wrap;gap:10px;min-height:44px}
+.card{flex:1 1 230px;min-width:0;display:flex;gap:10px;align-items:center;padding:11px 13px;border-radius:14px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+  font-weight:600;font-size:14px;line-height:1.35;background:linear-gradient(135deg,rgba(255,79,163,.38),rgba(138,107,255,.38));border:1px solid rgba(255,255,255,.4);box-shadow:0 5px 14px rgba(6,2,30,.35);transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-2px)}
+.card .grip{flex:0 0 10px;height:22px;background:radial-gradient(rgba(255,255,255,.7) 1.4px,transparent 1.6px) 0 0/5px 7px}
+.card.sel{outline:3px solid var(--cyan);transform:translateY(-3px)}
+.card.lifted{opacity:.3}
+.card.ghost{position:fixed;left:0;top:0;z-index:80;pointer-events:none;margin:0;cursor:grabbing;box-shadow:0 18px 40px rgba(0,0,0,.55)}
+.card.nope{animation:shake .35s}
+.fbk{border-radius:16px;padding:12px 14px;border:1px solid;font-size:14px;display:flex;flex-direction:column;gap:3px;animation:pop .3s}
+.fbk b{font:800 15px var(--f-d)}
+.fbk.ok{background:rgba(200,255,62,.14);border-color:rgba(200,255,62,.6)}
+.fbk.bad{background:rgba(255,84,112,.16);border-color:rgba(255,84,112,.65)}
+.fbk.info{background:rgba(53,227,240,.13);border-color:rgba(53,227,240,.6)}
+.fbk .key{color:var(--lime);font-size:13px;margin-top:4px}
+.float{position:fixed;z-index:70;pointer-events:none;font:800 20px var(--f-d);color:var(--lime);text-shadow:0 2px 10px rgba(0,0,0,.6);animation:rise .9s ease-out forwards}
+.float.neg{color:#FF8FA3}
+@keyframes rise{to{transform:translateY(-46px);opacity:0}}
+
+/* ===== modal & toast ===== */
+.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;overflow:auto;background:rgba(8,4,28,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal .glass{width:100%;max-width:520px;display:flex;flex-direction:column;gap:14px;background:rgba(34,20,92,.82);animation:pop .35s}
+.modal h2{font-size:clamp(24px,6vw,32px)}
+.stars{display:flex;gap:6px}
+.stars svg{width:38px;height:38px;fill:rgba(255,255,255,.18);stroke:none}
+.stars svg.on{fill:var(--amber);animation:pop .5s backwards}
+.stars svg.on:nth-child(2){animation-delay:.15s}.stars svg.on:nth-child(3){animation-delay:.3s}
+.toasts{position:fixed;z-index:60;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 16px;pointer-events:none}
+.toast{display:flex;gap:10px;align-items:center;max-width:420px;padding:10px 14px;border-radius:16px;background:rgba(40,22,100,.9);border:1px solid var(--amber);box-shadow:0 10px 30px rgba(0,0,0,.5);animation:pop .35s}
+.toast .bd{flex:0 0 34px;height:34px}
+.toast b{font:800 14px var(--f-d);color:var(--amber);display:block}
+.toast span{font-size:12.5px;color:var(--mute)}
+
+/* ===== hasil ===== */
+.rtop{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.ring{--p:0;width:132px;height:132px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--lime) calc(var(--p)*1%),rgba(255,255,255,.14) 0)}
+.ring>div{width:104px;height:104px;border-radius:50%;background:var(--bg2);display:grid;place-content:center;text-align:center}
+.ring b{font:800 28px/1 var(--f-d)}
+.ring span{font-size:11px;color:var(--mute)}
+.rtitle h2{font-size:clamp(24px,5.6vw,36px)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{text-align:center}
+.stat b{display:block;font:800 24px var(--f-d);color:var(--lime);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--mute)}
+.lvcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.lvcards .stars svg{width:24px;height:24px}
+.lvcards h4{margin:0 0 4px;font:800 14px var(--f-d)}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.bdg{text-align:center;padding:12px 8px;border-radius:16px;background:rgba(255,185,56,.14);border:1px solid rgba(255,185,56,.6);display:flex;flex-direction:column;align-items:center;gap:6px}
+.bdg.lock{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15);filter:grayscale(1);opacity:.55}
+.bdg svg{width:34px;height:34px}
+.bdg b{font:800 12.5px/1.2 var(--f-d)}
+.bdg span{font-size:11px;color:var(--mute);line-height:1.3}
+.skill{display:grid;grid-template-columns:minmax(90px,150px) 1fr 44px;gap:10px;align-items:center;font-size:13px;margin-bottom:8px}
+.skill .pbar{height:10px}
+.skill b{text-align:right;font-variant-numeric:tabular-nums}
+.pos{background:linear-gradient(135deg,rgba(200,255,62,.2),rgba(53,227,240,.16));border:1px solid rgba(200,255,62,.6);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.pos.low{background:linear-gradient(135deg,rgba(255,185,56,.2),rgba(255,79,163,.16));border-color:rgba(255,185,56,.7)}
+.pos h3{font-size:20px}
+.recap{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;font-size:13.5px}
+.recap h4{margin:0 0 6px;font:800 15px var(--f-d);color:var(--cyan)}
+.recap ol,.recap ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+details.lg{border:1px solid rgba(255,255,255,.16);border-radius:14px;background:rgba(255,255,255,.05);margin-bottom:8px;overflow:hidden}
+details.lg summary{cursor:pointer;padding:12px 14px;font:800 14px var(--f-d)}
+.lgi{display:flex;gap:10px;padding:10px 14px;border-top:1px solid rgba(255,255,255,.1);font-size:13px}
+.lgi .mk{flex:0 0 22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;color:var(--ink)}
+.lgi .mk.y{background:var(--lime)}.lgi .mk.n{background:var(--amber)}
+.lgi div{min-width:0}
+.lgi small{display:block;color:var(--mute)}
+h3.sec{font-size:18px;margin-bottom:10px}
+
+@media (max-width:520px){
+  .glass{padding:14px;border-radius:18px}
+  .zone{padding:7px;min-height:70px}
+  .zone-h{font-size:10px;letter-spacing:.03em}
+  .chip{font-size:11px;padding:4px 6px}
+  .fish{gap:6px}
+  .rtop{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .skill{grid-template-columns:1fr 44px}.skill .pbar{grid-column:1/-1;grid-row:2}
+  .uname{max-width:24vw}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;scroll-behavior:auto}}
+</style>
+<style>
+.slot .zone-h{text-transform:none;font-size:13.5px;letter-spacing:0;color:var(--tx)}
+.slot .zone-s{color:var(--cyan)}
+.hud .iconbtn svg{width:20px;height:20px}
+.btn svg.i{width:1.1em;height:1.1em}
+.tmr svg{width:16px;height:16px}
+.toast .bd{width:34px;height:34px}
+.bdg svg{width:34px;height:34px}
+</style>
+<style>[hidden]{display:none!important}html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21l-1.4-1.3C5.4 15 2 12 2 8.5 2 5.5 4.4 3.5 7 3.5c1.7 0 3.4.8 5 2.6 1.6-1.8 3.3-2.6 5-2.6 2.6 0 5 2 5 5 0 3.5-3.4 6.5-8.6 11.2L12 21z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8 5.8 21.1 7 14.2 2 9.3l6.9-1L12 2z"/></symbol>
+  <symbol id="i-music" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></g></symbol>
+  <symbol id="i-vol" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 8.5a5 5 0 010 7"/><path d="M19 6a8.5 8.5 0 010 12"/></g></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></g></symbol>
+  <symbol id="i-badge" viewBox="0 0 32 32"><circle cx="16" cy="14" r="11" fill="currentColor"/><path d="M10 24l-3 7 6-3 3 3 3-3 6 3-3-7" fill="currentColor" opacity=".75"/><path d="M16 8l2.2 4.4 4.8.7-3.5 3.4.8 4.8L16 19l-4.3 2.3.8-4.8L9 13.1l4.8-.7L16 8z" fill="#140B33"/></symbol>
+</svg>
+
+<main class="app">
+
+  <!-- ===== GATEWAY ===== -->
+  <section id="s-gate" class="screen">
+    <div class="glass hero">
+      <div class="chip-tag">Misi 04 · Problem Solving &amp; Decision Making</div>
+      <h1>Detektif <span class="hl">Akar Masalah</span></h1>
+      <p class="lead">Roti tawar Line 2 shift 2 melenceng dari berat standar. Semua orang punya tersangka. Kamu punya papan tulang ikan, rantai 5 Why, dan satu aturan: bukti dulu, baru tuduhan.</p>
+      <div class="why">
+        <div class="why-h">WHY · KENAPA INI PENTING</div>
+        <p>Mesin sama, resep sama, bahan sama. Tapi shift 2 menghasilkan roti di luar toleransi 3,5 kali lebih sering. Satu operator sudah dituduh. Bagaimana kalau tuduhannya salah dan masalah yang sama muncul lagi minggu depan?</p>
+        <div class="vs">
+          <div class="vs-a"><b>4%</b><span>Shift 1 di luar ±10 g</span></div>
+          <div class="vs-x">VS</div>
+          <div class="vs-b"><b>14%</b><span>Shift 2 di luar ±10 g</span></div>
+        </div>
+        <small>Semua angka adalah data simulasi untuk pembelajaran.</small>
+      </div>
+      <form id="fName" class="nameform" autocomplete="off" novalidate>
+        <label for="inName">Nama detektif</label>
+        <div class="row">
+          <input id="inName" name="nama" maxlength="24" placeholder="Ketik namamu di sini" aria-describedby="nameErr">
+          <button class="btn" type="submit">Lanjut ke briefing</button>
+        </div>
+        <div id="nameErr" class="err" role="alert" hidden>Isi namamu dulu ya, detektif.</div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===== BRIEFING ===== -->
+  <section id="s-brief" class="screen" hidden>
+    <div class="glass hero">
+      <div class="chip-tag">Mission briefing</div>
+      <h2 id="bTitle" style="font-size:clamp(26px,6vw,42px)">Halo, Detektif</h2>
+      <p class="lead">Kamu baru dipanggil ke Line 2. Laporan QC menunjukkan 14% sampel roti tawar shift 2 di luar toleransi ±10 g, sedangkan shift 1 hanya 4%. Operator mulai saling menyalahkan dan manajemen minta jawaban hari ini.</p>
+      <div class="grid2">
+        <div class="inner">
+          <h3>Mission objective</h3>
+          <ol>
+            <li>Petakan kemungkinan penyebab ke kategori 6M di papan Fishbone.</li>
+            <li>Susun rantai 5 Why yang setiap "Mengapa" punya bukti.</li>
+            <li>Bedakan korelasi, hipotesis, dan penyebab terbukti, lalu pilih jenis tindakan.</li>
+          </ol>
+        </div>
+        <div class="inner">
+          <h3>Peraturan main</h3>
+          <ul class="rules">
+            <li><span>Seret kartu ke zona yang tepat. Di HP, boleh ketuk kartu lalu ketuk zonanya.</span></li>
+            <li><span>10 soal dalam 3 level. Tiap level punya 3 nyawa.</span></li>
+            <li><span>Benar +100 poin plus bonus combo. Salah −30 poin dan −1 nyawa.</span></li>
+            <li><span>Petunjuk boleh dipakai sekali per soal dengan harga 20 poin.</span></li>
+            <li><span>Kumpulkan lencana dan target akurasi 70% untuk lulus.</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="curious"><b>Teka-teki pembuka:</b> kalau seorang operator melapor "roti sering terlalu ringan", apakah itu penyebab? Atau baru pintu masuk? Jawabannya menentukan apakah kamu memperbaiki masalah atau cuma menambalnya.</div>
+      <label class="switch" for="chChal"><input type="checkbox" id="chChal"><span><b>Mode Tantangan</b>: timer per soal dan bonus waktu (opsional)</span></label>
+      <div class="actions" style="justify-content:flex-start">
+        <button class="btn big pulse" id="btnStart" type="button">Siap! Mulai misi</button>
+        <button class="btn ghost" id="btnBack" type="button">Ganti nama</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== GAME ===== -->
+  <section id="s-game" class="screen" hidden>
+    <div class="glass hud">
+      <div class="hud-row">
+        <div class="hud-l"><div class="av" id="hAv">D</div><div class="uname" id="hName"></div><div class="lv" id="hLv"></div></div>
+        <div class="hud-r">
+          <div class="tmr" id="hTmr" hidden><svg class="i"><use href="#i-clock"/></svg><span id="hTmrV">0</span></div>
+          <div class="hearts" id="hHearts" aria-label="Nyawa"></div>
+          <div class="score" id="hScore">0</div>
+          <button class="iconbtn" id="btnBgm" type="button" aria-label="Musik latar" title="Musik latar"><svg><use href="#i-music"/></svg></button>
+          <button class="iconbtn" id="btnSfx" type="button" aria-label="Efek suara" title="Efek suara"><svg><use href="#i-vol"/></svg></button>
+        </div>
+      </div>
+      <div class="pwrap"><span class="eyebrow">Progres</span><div class="pbar"><div class="pfill" id="hFill"></div></div><div class="ppct" id="hPct">0%</div></div>
+    </div>
+    <div id="stage"></div>
+  </section>
+
+  <!-- ===== HASIL ===== -->
+  <section id="s-result" class="screen" hidden></section>
+
+  <footer class="foot">Education &amp; Training Dept. © 2026</footer>
+</main>
+
+<div id="modal" class="modal" hidden></div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<script>
+(()=>{
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* ================= AUDIO (Web Audio API, tanpa file) ================= */
+const Snd=(()=>{
+  let ac=null,master,bgm,sfx,lp,noiseBuf,timer=null,step=0,next=0,bgmOn=true,sfxOn=true,running=false;
+  const SPS=60/108/4;
+  const CH=[
+    {r:110,c:[220,261.63,329.63],a:[440,523.25,659.25,880]},
+    {r:87.31,c:[174.61,220,261.63],a:[349.23,440,523.25,698.46]},
+    {r:130.81,c:[261.63,329.63,392],a:[392,523.25,659.25,784]},
+    {r:98,c:[196,246.94,293.66],a:[392,493.88,587.33,784]}];
+  const ARP=[0,2,1,3,2,1,3,2,0,2,1,3,2,3,1,0], GATE=[1,0,1,1,0,1,0,1,1,0,1,0,1,1,0,1];
+  function init(){
+    if(ac) return;
+    try{
+      const C=window.AudioContext||window.webkitAudioContext; ac=new C();
+      master=ac.createGain(); master.gain.value=.9; master.connect(ac.destination);
+      lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2200; lp.connect(master);
+      bgm=ac.createGain(); bgm.gain.value=bgmOn?.16:0; bgm.connect(lp);
+      sfx=ac.createGain(); sfx.gain.value=sfxOn?.5:0; sfx.connect(master);
+      noiseBuf=ac.createBuffer(1,ac.sampleRate*.5,ac.sampleRate);
+      const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    }catch(e){ac=null}
+  }
+  function resume(){ if(ac&&ac.state==='suspended') ac.resume() }
+  function tone(f,t,d,type,v,dest,f2){
+    const o=ac.createOscillator(),g=ac.createGain(); o.type=type; o.frequency.setValueAtTime(f,t);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d);
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(v,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g); g.connect(dest); o.start(t); o.stop(t+d+.05);
+  }
+  function noise(t,d,v,hp,dest){
+    const s=ac.createBufferSource(); s.buffer=noiseBuf; const f=ac.createBiquadFilter(); f.type='highpass'; f.frequency.value=hp;
+    const g=ac.createGain(); g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    s.connect(f); f.connect(g); g.connect(dest); s.start(t); s.stop(t+d+.02);
+  }
+  function pad(f,t,d){
+    const o=ac.createOscillator(),g=ac.createGain(); o.type='triangle'; o.frequency.value=f;
+    g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(.05,t+.4); g.gain.linearRampToValueAtTime(.0001,t+d);
+    o.connect(g); g.connect(bgm); o.start(t); o.stop(t+d+.05);
+  }
+  function playStep(s,t){
+    const i=s%16, ch=CH[Math.floor(s/16)%4];
+    if(i===0) ch.c.forEach(f=>pad(f,t,SPS*16));
+    if(i===0||i===8||i===10) tone(110,t,.16,'sine',.9,bgm,38);
+    if(i===4||i===12) noise(t,.12,.35,1800,bgm);
+    if(i%2===0) noise(t,.04,.12,7000,bgm); else if(i%4===3) noise(t,.03,.06,7000,bgm);
+    if(i===0||i===3||i===6||i===8||i===11||i===14) tone(ch.r,t,SPS*2.2,'triangle',.55,bgm);
+    if(GATE[i]) tone(ch.a[ARP[i]%4],t,SPS*1.6,'square',.07,bgm);
+  }
+  function sched(){ if(!ac||!bgmOn) return; while(next<ac.currentTime+.12){ playStep(step,next); next+=SPS; step++ } }
+  function start(){
+    init(); if(!ac) return; resume();
+    if(!running){ running=true; step=0; next=ac.currentTime+.08; timer=setInterval(sched,25) }
+  }
+  function setBgm(on){ bgmOn=on; if(!ac) return; bgm.gain.setTargetAtTime(on?.16:0,ac.currentTime,.05); if(on) next=ac.currentTime+.08 }
+  function setSfx(on){ sfxOn=on; if(!ac) return; sfx.gain.setTargetAtTime(on?.5:0,ac.currentTime,.02) }
+  const FX={
+    click(t){tone(900,t,.05,'square',.25,sfx)},
+    pick(t){tone(520,t,.09,'triangle',.5,sfx,820)},
+    drop(t){tone(200,t,.1,'sine',.6,sfx,120)},
+    good(t){[523.25,659.25,783.99,1046.5].forEach((f,i)=>{tone(f,t+i*.07,.2,'triangle',.5,sfx);tone(f*2,t+i*.07,.12,'sine',.14,sfx)})},
+    bad(t){tone(240,t,.28,'sawtooth',.33,sfx,110);tone(180,t+.09,.3,'square',.18,sfx,80)},
+    heart(t){tone(160,t,.35,'sine',.8,sfx,45);noise(t,.15,.2,400,sfx)},
+    hint(t){tone(740,t,.12,'sine',.4,sfx);tone(988,t+.1,.18,'sine',.35,sfx)},
+    star(t){[1318,1568,2093].forEach((f,i)=>tone(f,t+i*.09,.18,'sine',.3,sfx))},
+    level(t){[523.25,659.25,783.99,1046.5,1318.5].forEach((f,i)=>{tone(f,t+i*.1,.28,'triangle',.5,sfx);tone(f/2,t+i*.1,.28,'square',.12,sfx)})},
+    badge(t){[880,1174.7,1568,1760].forEach((f,i)=>tone(f,t+i*.08,.22,'sine',.38,sfx))},
+    win(t){[523.25,659.25,783.99,1046.5,783.99,1046.5,1318.5,1568].forEach((f,i)=>{tone(f,t+i*.12,.34,'triangle',.5,sfx);tone(f*1.5,t+i*.12,.2,'sine',.12,sfx)})},
+    tick(t){tone(1400,t,.04,'square',.2,sfx)},
+    go(t){[392,523.25,784].forEach((f,i)=>tone(f,t+i*.09,.25,'square',.22,sfx))}
+  };
+  function fx(n){ if(!ac||!sfxOn) return; resume(); try{FX[n](ac.currentTime)}catch(e){} }
+  document.addEventListener('visibilitychange',()=>{ if(!ac) return; if(document.hidden) ac.suspend(); else resume() });
+  return {start,setBgm,setSfx,fx,get bgm(){return bgmOn},get sfx(){return sfxOn}};
+})();
+
+/* ================= DATA: 3 LEVEL, 10 SOAL (dari modul Problem Solving & Decision Making) ================= */
+const LV=[
+  {name:'Mudah',tool:'Fishbone',title:'Bangun Fishbone 6M',
+   story:'06:40, Line 2. QC menempelkan hasil timbang: 14% sampel shift 2 di luar ±10 g, shift 1 hanya 4%. Operator saling menyalahkan. Kamu tidak menuduh siapa pun. Kamu pergi ke lokasi (Gemba), mencatat temuan, lalu menaruhnya di papan tulang ikan.',
+   key:'Fishbone membantu tim melihat seluruh kemungkinan; bukti yang memilih mana yang benar.'},
+  {name:'Menengah',tool:'5 Why',title:'Susun Rantai 5 Why',
+   story:'Papan Fishbone sudah penuh. Data awal menunjukkan masalah hanya muncul di shift 2, jadi cabang Man dan Method diverifikasi lebih dulu, bukan langsung mengganti mesin. Sekarang telusuri rantai "Mengapa" dan pastikan tiap jawaban punya bukti.',
+   key:'Kekuatan 5 Why bukan pada angka lima, melainkan pada disiplin meminta bukti di setiap jawaban.'},
+  {name:'Sulit',tool:'Validasi & Tindakan',title:'Validasi dan Tindakan',
+   story:'Tim punya banyak dugaan yang terdengar meyakinkan. Sebelum perusahaan mengeluarkan biaya, kamu menguji status tiap dugaan. Setelah itu kamu memilih jenis tindakan agar pabrik tetap aman hari ini dan masalahnya tidak kembali besok.',
+   key:'Satu penyebab yang diuji dengan benar lebih berharga daripada sepuluh dugaan yang terdengar meyakinkan.'}
+];
+
+const BONES=[
+  {id:'man',label:'Man (manusia)',c:'var(--pink)'},{id:'mac',label:'Machine (mesin)',c:'var(--cyan)'},{id:'met',label:'Method (metode)',c:'var(--lime)'},
+  {id:'mat',label:'Material',c:'var(--amber)'},{id:'mea',label:'Measurement (alat ukur)',c:'var(--violet)'},{id:'env',label:'Environment (lingkungan)',c:'var(--mint)'}];
+
+const WHYQ=['Mengapa berat bervariasi?','Mengapa divider tidak stabil?','Mengapa setting berubah?','Mengapa tidak diverifikasi?','Mengapa instruksi belum jelas?'];
+const WHYA=['Berat hasil divider tidak stabil','Setting dan suhu adonan diduga berubah','Tidak ada verifikasi di awal shift','Instruksi kerja tidak menetapkan frekuensi cek','SOP belum diperbarui sejak perubahan formula'];
+const WHYE=['Timbang 30 sampel per jam','Bandingkan setting dan suhu adonan antar shift','Periksa catatan dan observasi serah terima','Tinjau SOP dan wawancara operator','Cek riwayat revisi dan pelatihan'];
+
+const Q=[
+ /* ---- LEVEL 1: FISHBONE ---- */
+ {lv:0,mode:'fish',title:'Alat ukur diragukan',tag:'Temuan Gemba #1.',story:'Timbangan sampel QC tidak punya stiker kalibrasi dan angkanya sering berbeda dari timbangan cadangan.',
+  prompt:'Taruh penyebab ini di tulang yang tepat.',hint:'Ini soal alat yang dipakai untuk mengukur berat, bukan mesin yang membuat roti.',
+  cards:[{t:'Timbangan belum dikalibrasi',to:'mea',fb:'Alat ukur yang belum dikalibrasi masuk Measurement. Pastikan alat ukur akurat sebelum mempercayai data.',h:'Cari kategori yang mengurusi cara kita mengukur.'}]},
+ {lv:0,mode:'fish',title:'Aturan yang bolong',tag:'Temuan Gemba #2.',story:'Lembar serah terima shift tidak menulis seberapa sering berat adonan harus dicek.',
+  prompt:'Taruh penyebab ini di tulang yang tepat.',hint:'Ini tentang aturan atau prosedur kerja, bukan orang atau alatnya.',
+  cards:[{t:'Frekuensi cek tak ditetapkan',to:'met',fb:'Prosedur atau SOP yang kurang jelas masuk Method.',h:'Pikirkan SOP dan instruksi kerja.'}]},
+ {lv:0,mode:'fish',title:'Mesin bergeser',tag:'Temuan Gemba #3.',story:'Berat adonan di awal shift 2 berbeda dari akhir shift 1. Operator bilang pengaturan divider terasa "bergeser".',
+  prompt:'Taruh dugaan ini di tulang yang tepat.',hint:'Setting dan keausan peralatan punya kategorinya sendiri.',
+  cards:[{t:'Setting mesin bergeser',to:'mac',fb:'Setting dan keausan peralatan masuk Machine. Ingat, ini masih hipotesis sampai ada bukti.',h:'Ini tentang peralatan produksinya.'}]},
+ {lv:0,mode:'fish',title:'Bahan dan ruangan',tag:'Temuan Gemba #4.',story:'Kadar air tepung beda antar lot, dan ruang produksi terasa lembap siang hari. Dua kartu, dua tulang berbeda.',
+  prompt:'Taruh kedua temuan di tulang yang tepat.',hint:'Satu soal tentang bahan baku, satunya tentang kondisi sekitar ruang.',
+  cards:[{t:'Kadar air tepung bervariasi',to:'mat',fb:'Variasi bahan baku masuk Material.',h:'Ini bahan yang masuk ke mixer.'},
+         {t:'Kelembapan ruang produksi tinggi',to:'env',fb:'Kondisi sekitar ruang produksi masuk Environment.',h:'Ini kondisi ruang, bukan bahan.'}]},
+ {lv:0,mode:'fish',title:'Jangan cari kambing hitam',tag:'Rapat darurat.',story:'Seseorang berkata operator shift 2 kurang teliti. Padahal ada operator baru yang belum pernah dilatih cek berat. Pisahkan penyebab sistem dari tuduhan.',
+  prompt:'Satu kartu ke tulang yang tepat, satu ke tong "Bukan penyebab".',hint:'RCA memeriksa sistem dan proses, bukan mencari kambing hitam.',
+  cards:[{t:'Operator kurang teliti',to:'trash',badge:'noblame',fb:'Menyalahkan orang bukan penyebab yang bisa diverifikasi. RCA memeriksa sistem dan proses, bukan mencari kambing hitam.',h:'Apakah ini faktor sistem, atau tuduhan terhadap orang?'},
+         {t:'Operator baru belum terlatih',to:'man',fb:'Kurangnya pelatihan adalah faktor sistem, jadi masuk Man sebagai hipotesis yang perlu dibuktikan.',h:'Ini kekurangan pelatihan, yaitu soal manusia dalam sistem.'}]},
+ /* ---- LEVEL 2: 5 WHY ---- */
+ {lv:1,mode:'slots',title:'Urutkan rantai Mengapa',tag:'Papan 5 Why.',story:'Pernyataan masalah: 14% sampel shift 2 di luar toleransi (shift 1: 4%). Tiap jawaban harus menjadi sebab dari jawaban sebelumnya.',
+  prompt:'Seret lima jawaban ke slot Mengapa yang sesuai, dari gejala sampai akar.',hint:'Mulai dari yang paling terlihat (berat tidak stabil) dan berakhir di SOP.',
+  targets:WHYQ.map((q,i)=>({id:'w'+i,num:i+1,label:q})),
+  cards:WHYA.map((a,i)=>({t:a,to:'w'+i,fb:'Jawaban #'+(i+1)+' menjawab "'+WHYQ[i]+'". Rantai Why yang baik bergerak dari gejala menuju penyebab yang dapat dikendalikan.',h:'Tanyakan: jawaban ini menjawab "Mengapa" yang mana?'}))},
+ {lv:1,mode:'slots',title:'Setiap Mengapa butuh bukti',tag:'Audit bukti.',story:'Rantai Why tanpa bukti hanyalah cerita. Pasangkan bukti yang bisa diperiksa dengan jawaban yang mau dibuktikan.',
+  prompt:'Seret bukti ke jawaban Why yang dibuktikannya.',hint:'Bukti untuk "berat tidak stabil" adalah menimbang sampel. Bukti untuk SOP adalah riwayat revisi.',
+  targets:WHYA.map((a,i)=>({id:'e'+i,num:i+1,label:a,sub:WHYQ[i]})),
+  cards:WHYE.map((e,i)=>({t:e,to:'e'+i,fb:'"'+e+'" adalah bukti yang dapat diperiksa untuk jawaban #'+(i+1)+'.',h:'Bukti apa yang paling langsung menguji jawaban ini?'}))},
+ {lv:1,mode:'buckets',title:'Tolak para pengecoh',tag:'Hati-hati.',story:'Empat jawaban diusulkan untuk "Mengapa setting berubah?". Hanya satu yang berbasis fakta dan menunjuk proses. Sisanya jebakan klasik RCA.',
+  prompt:'Tentukan mana yang layak jadi jawaban Why dan mana yang ditolak.',hint:'Tolak jawaban yang menyalahkan orang, melompat ke solusi, atau berhenti di gejala.',
+  targets:[{id:'ok',label:'Layak jadi jawaban Why',sub:'Berbasis fakta, menunjuk proses',c:'var(--lime)'},{id:'no',label:'Tolak',sub:'Menyalahkan, solusi, atau gejala',c:'var(--red)'}],
+  cards:[{t:'Tidak ada verifikasi setting di awal shift',to:'ok',fb:'Jawaban ini menunjuk proses kerja dan dapat diperiksa lewat catatan serah terima.',h:'Apakah ini bisa dibuktikan dan menunjuk proses?'},
+         {t:'Operator shift 2 kurang teliti',to:'no',fb:'Menyalahkan operator tanpa melihat sistem kerjanya adalah kesalahan umum RCA.',h:'Tuduhan terhadap orang atau penyebab sistem?'},
+         {t:'Beli divider baru sekarang',to:'no',fb:'Ini melompat ke solusi sebelum akar penyebab terbukti.',h:'Ini jawaban "mengapa" atau sudah solusi?'},
+         {t:'Roti terlihat lebih ringan',to:'no',fb:'Ini gejala yang sudah diketahui, bukan penyebab. Berhenti di gejala adalah kesalahan umum.',h:'Ini yang kita lihat, bukan yang menyebabkan.'}]},
+ /* ---- LEVEL 3: VALIDASI & TINDAKAN ---- */
+ {lv:2,mode:'buckets',title:'Korelasi, hipotesis, atau terbukti?',tag:'Uji pernyataan.',story:'Tiga pernyataan beredar di grup kerja. Statusnya berbeda, dan keputusan biaya hanya boleh bersandar pada yang terbukti.',
+  prompt:'Seret tiap pernyataan ke status penyebab yang tepat.',hint:'Terbukti berarti mengubah faktornya mengubah hasil. Hipotesis siap diuji. Korelasi hanya bergerak bersama.',
+  targets:[{id:'kor',label:'Korelasi',sub:'Bergerak bersama, belum tentu saling menyebabkan',c:'var(--amber)'},{id:'hip',label:'Hipotesis',sub:'Dugaan logis yang siap diuji',c:'var(--cyan)'},{id:'ter',label:'Penyebab terbukti',sub:'Didukung bukti dan uji',c:'var(--lime)'}],
+  cards:[{t:'Reject naik saat suhu ruang naik',to:'kor',fb:'Dua hal bergerak bersama belum tentu saling menyebabkan. Ini korelasi.',h:'Ada uji yang mengubah satu faktor? Belum.'},
+         {t:'Setting mesin bergeser',to:'hip',fb:'Dugaan yang logis dan siap diuji adalah hipotesis.',h:'Masuk akal, tapi belum diuji.'},
+         {t:'Verifikasi awal shift menurunkan variasi berat',to:'ter',fb:'Mengubah faktor ini mengubah hasil, sudah didukung uji dan data sebelum-sesudah. Penyebab terbukti.',h:'Sudah ada uji yang menunjukkan perubahan hasil.'}]},
+ {lv:2,mode:'buckets',title:'Pilih jenis tindakan',tag:'Keputusan akhir.',story:'Akar penyebab sudah terbukti. Kamu harus menjaga pabrik tetap aman sambil menyelesaikan sumber masalah dan mencegahnya muncul di line lain.',
+  prompt:'Seret tiap tindakan ke jenis yang tepat.',hint:'Sementara mengendalikan dampak. Korektif menghilangkan akar. Pencegahan melindungi tempat atau waktu lain.',
+  targets:[{id:'sem',label:'Tindakan sementara',sub:'Kendalikan dampak segera',c:'var(--amber)'},{id:'kor',label:'Tindakan korektif',sub:'Hilangkan akar penyebab',c:'var(--cyan)'},{id:'cen',label:'Tindakan pencegahan',sub:'Cegah serupa di tempat lain',c:'var(--lime)'}],
+  cards:[{t:'Timbang 100% adonan dan tahan produk di luar toleransi',to:'sem',fb:'Mengendalikan dampak sambil menunggu perbaikan adalah tindakan sementara.',h:'Ini menjaga pabrik jalan, belum menutup sumbernya.'},
+         {t:'Verifikasi setting mesin tiap awal shift dan perbarui SOP',to:'kor',fb:'Ini menghilangkan akar penyebab yang sudah ada, jadi korektif.',h:'Ini menyentuh akar penyebab di line ini.'},
+         {t:'Terapkan standar verifikasi di semua line dan masukkan ke pelatihan operator baru',to:'cen',fb:'Mencegah masalah serupa muncul di tempat atau waktu lain adalah pencegahan.',h:'Perhatikan kata "semua line" dan "operator baru".'}]}
+];
+const TOTAL_CARDS=Q.reduce((n,q)=>n+q.cards.length,0);
+
+const BADGES=[
+  {id:'fish',n:'Tulang Ikan Master',d:'Selesaikan Level 1',c:'#35E3F0'},
+  {id:'why',n:'Why Hunter',d:'Selesaikan Level 2',c:'#C8FF3E'},
+  {id:'proof',n:'Bukti Dulu!',d:'Selesaikan Level 3',c:'#FF4FA3'},
+  {id:'noblame',n:'Anti Kambing Hitam',d:'Tolak tuduhan pada operator',c:'#FFB938'},
+  {id:'combo',n:'Combo x5',d:'5 jawaban benar beruntun',c:'#8A6BFF'},
+  {id:'half',n:'Setengah Jalan',d:'Capai progres 50%',c:'#5CF2B4'},
+  {id:'flawless',n:'Tanpa Salah',d:'Satu level tanpa kesalahan',c:'#FF8A4F'},
+  {id:'detective',n:'Detektif Akar Masalah',d:'Akurasi akhir 85% atau lebih',c:'#FFD84F'}
+];
+
+/* ================= ENGINE ================= */
+const S={name:''};
+function reset(){
+  Object.assign(S,{score:0,hearts:3,qi:0,streak:0,best:0,solved:0,log:[],badges:new Set(),fish:{},stars:[0,0,0],lvMist:[0,0,0],refill:[false,false,false],cur:null,sel:null,locked:true,tInt:null,tLeft:0});
+}
+reset();
+const show=id=>{['gate','brief','game','result'].forEach(k=>{$('#s-'+k).hidden=(k!==id)});window.scrollTo({top:0})};
+const curLv=()=>Q[Math.min(S.qi,Q.length-1)].lv;
+
+/* ---- gateway & briefing ---- */
+$('#fName').addEventListener('submit',e=>{
+  e.preventDefault();
+  const v=$('#inName').value.trim();
+  if(!v){const f=$('#fName');$('#nameErr').hidden=false;f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');$('#inName').focus();return}
+  $('#nameErr').hidden=true; S.name=v; Snd.start(); Snd.fx('click');
+  $('#bTitle').textContent='Halo, Detektif '+v; show('brief');
+});
+$('#btnBack').onclick=()=>{Snd.fx('click');show('gate')};
+$('#btnStart').onclick=()=>{
+  Snd.start(); const ch=$('#chChal').checked; reset(); S.challenge=ch; Snd.fx('go');
+  show('game'); hud(); levelIntro(0);
+};
+function syncAud(){
+  $('#btnBgm').classList.toggle('off',!Snd.bgm); $('#btnSfx').classList.toggle('off',!Snd.sfx);
+  $('#btnBgm').setAttribute('aria-pressed',String(Snd.bgm)); $('#btnSfx').setAttribute('aria-pressed',String(Snd.sfx));
+}
+$('#btnBgm').onclick=()=>{Snd.start();Snd.setBgm(!Snd.bgm);syncAud();Snd.fx('click')};
+$('#btnSfx').onclick=()=>{Snd.setSfx(!Snd.sfx);syncAud();Snd.fx('click')};
+syncAud();
+
+/* ---- HUD, modal, toast ---- */
+function hud(){
+  const lv=curLv();
+  $('#hName').textContent=S.name; $('#hAv').textContent=(S.name[0]||'D').toUpperCase();
+  $('#hLv').textContent='Lv '+(lv+1)+' · '+LV[lv].name;
+  $('#hScore').textContent=S.score;
+  $('#hHearts').innerHTML=[0,1,2].map(i=>'<svg class="'+(i<S.hearts?'':'off')+'"><use href="#i-heart"/></svg>').join('');
+  const p=Math.round(S.solved/Q.length*100);
+  $('#hFill').style.width=p+'%'; $('#hPct').textContent=p+'%'; $('#hTmr').hidden=!S.challenge;
+}
+function modal(html){
+  const m=$('#modal'); m.innerHTML='<div class="glass" role="dialog" aria-modal="true">'+html+'</div>'; m.hidden=false; m.scrollTop=0;
+  const b=$('button.btn',m); if(b) b.focus({preventScroll:true});
+}
+const closeModal=()=>{$('#modal').hidden=true};
+function toast(html){
+  const t=document.createElement('div'); t.className='toast'; t.innerHTML=html; $('#toasts').appendChild(t);
+  setTimeout(()=>t.remove(),3800);
+}
+function award(id){
+  if(S.badges.has(id)) return; S.badges.add(id);
+  const b=BADGES.find(x=>x.id===id); Snd.fx('badge');
+  toast('<svg class="bd" style="color:'+b.c+'"><use href="#i-badge"/></svg><div><b>Lencana baru: '+esc(b.n)+'</b><span>'+esc(b.d)+'</span></div>');
+}
+function floatAt(el,text,neg){
+  const r=el.getBoundingClientRect(), f=document.createElement('div');
+  f.className='float'+(neg?' neg':''); f.textContent=text;
+  f.style.left=(r.left+r.width/2-24)+'px'; f.style.top=(r.top+r.height/2-12)+'px';
+  document.body.appendChild(f); setTimeout(()=>f.remove(),950);
+}
+function fb(kind,title,text,key){
+  $('#fbk').innerHTML='<div class="fbk '+kind+'" role="status"><b>'+esc(title)+'</b><span>'+esc(text)+'</span>'+(key?'<span class="key">Pesan kunci: '+esc(key)+'</span>':'')+'</div>';
+}
+
+/* ---- level intro ---- */
+function levelIntro(l){
+  S.locked=true; const L=LV[l], n=Q.filter(q=>q.lv===l).length;
+  Snd.fx('level');
+  modal('<div class="chip-tag">Level '+(l+1)+' · '+L.name+'</div><h2>'+esc(L.title)+'</h2><p class="story"><b>Cerita.</b> '+esc(L.story)+'</p><p class="muted">'+n+' soal di level ini · 3 nyawa · seret kartu ke zona yang tepat</p><button class="btn big" id="mGo" type="button">Mulai level</button>');
+  $('#mGo').onclick=()=>{closeModal();Snd.fx('click');S.hearts=3;S.qi=Q.findIndex(q=>q.lv===l);hud();renderQ()};
+}
+
+/* ---- render soal ---- */
+const cardHTML=c=>'<div class="card" data-cid="'+c.id+'" tabindex="0" role="button" aria-label="Kartu: '+esc(c.t)+'"><span class="grip"></span><span>'+esc(c.t)+'</span></div>';
+function zoneHTML(z,cls,chips){
+  const ch=(chips||[]).map(c=>'<div class="chip'+(c.x?' x':'')+'">'+esc(c.t)+'</div>').join('');
+  return '<div class="zone '+(cls||'')+'" data-zid="'+z.id+'" tabindex="0" role="group" aria-label="Zona '+esc(z.label)+'" style="--zc:'+(z.c||'var(--cyan)')+'"><div class="zone-h">'+esc(z.label)+'</div>'+(z.sub?'<div class="zone-s">'+esc(z.sub)+'</div>':'')+'<div class="zone-b">'+ch+'</div></div>';
+}
+function fishHTML(){
+  const bz=id=>{const b=BONES.find(x=>x.id===id);return zoneHTML({id,label:b.label,c:b.c},'',S.fish[id])};
+  return '<div class="fish">'+['man','mac','met'].map(bz).join('')+'<div class="spine"><div class="line"></div><div class="head">Berat roti tidak konsisten</div></div>'+['mat','mea','env'].map(bz).join('')+'</div>'+
+    zoneHTML({id:'trash',label:'Bukan penyebab (tong)',sub:'Tuduhan pada orang atau dugaan tanpa dasar',c:'var(--red)'},'trash',S.fish.trash);
+}
+function renderQ(){
+  const q=Q[S.qi], L=LV[q.lv], n=S.qi+1;
+  const cards=q.cards.map((c,i)=>Object.assign({},c,{id:'c'+i}));
+  S.cur={q,placed:0,wrong:0,hint:false,byId:Object.fromEntries(cards.map(c=>[c.id,c]))};
+  S.sel=null; S.locked=false;
+  let board;
+  if(q.mode==='fish') board=fishHTML();
+  else if(q.mode==='slots') board='<div class="slots">'+q.targets.map(t=>'<div class="slot"><div class="num">'+t.num+'</div>'+zoneHTML(t,'')+'</div>').join('')+'</div>';
+  else board='<div class="buckets">'+q.targets.map(t=>zoneHTML(t,'')).join('')+'</div>';
+  $('#stage').classList.remove('armed');
+  $('#stage').innerHTML=
+    '<div class="glass qhead"><div class="eyebrow">Soal '+n+' dari '+Q.length+' · '+esc(L.tool)+'</div><h2>'+esc(q.title)+'</h2><p class="story"><b>'+esc(q.tag)+'</b> '+esc(q.story)+'</p><p class="prompt">'+esc(q.prompt)+'</p></div>'+
+    '<div class="glass board">'+board+'</div>'+
+    '<div class="glass"><div class="tray-h">Kartu <span class="muted">· seret ke zona, atau ketuk kartu lalu ketuk zona</span></div><div class="tray" id="tray">'+shuffle(cards).map(cardHTML).join('')+'</div></div>'+
+    '<div id="fbk"></div>'+
+    '<div class="actions"><button class="btn ghost" id="btnHint" type="button"><svg class="i"><use href="#i-bulb"/></svg> Petunjuk (−20)</button><button class="btn" id="btnNext" type="button" hidden>Lanjut</button></div>';
+  $('#btnHint').onclick=()=>{
+    if(S.cur.hint||S.locked) return; S.cur.hint=true; S.score=Math.max(0,S.score-20);
+    Snd.fx('hint'); fb('info','Petunjuk (−20 poin)',q.hint); $('#btnHint').disabled=true; hud();
+  };
+  $('#btnNext').onclick=()=>{
+    Snd.fx('click'); const last=!Q[S.qi+1]||Q[S.qi+1].lv!==q.lv;
+    if(last) levelEnd(q.lv); else {S.qi++;hud();renderQ();window.scrollTo({top:0,behavior:'smooth'})}
+  };
+  hud(); startTimer();
+}
+
+/* ---- timer (mode tantangan) ---- */
+function tmr(){$('#hTmrV').textContent=Math.max(0,S.tLeft)+'s';$('#hTmr').classList.toggle('low',S.tLeft<=10)}
+function startTimer(){
+  clearInterval(S.tInt); if(!S.challenge) return;
+  S.tLeft=30+10*S.cur.q.cards.length; tmr();
+  S.tInt=setInterval(()=>{
+    if(S.locked) return;
+    S.tLeft--; if(S.tLeft<=5&&S.tLeft>0) Snd.fx('tick');
+    if(S.tLeft<=0){
+      S.tLeft=20; S.streak=0; S.score=Math.max(0,S.score-30); S.lvMist[S.cur.q.lv]++; Snd.fx('bad');
+      const r=loseHeart(); fb('bad','Waktu habis','Timer diberi 20 detik lagi. −30 poin dan −1 nyawa.'+(r?' Nyawa habis, diisi ulang, bintang level ini maksimal 1.':''));
+    }
+    tmr();
+  },1000);
+}
+
+/* ---- jawaban ---- */
+function loseHeart(){
+  S.hearts--; setTimeout(()=>Snd.fx('heart'),160); let r=false;
+  if(S.hearts<=0){S.hearts=3;S.refill[S.cur.q.lv]=true;r=true}
+  hud(); return r;
+}
+function drop(el,zone){
+  if(S.locked||!S.cur) return;
+  const c=S.cur.byId[el.dataset.cid]; if(!c||c.done) return;
+  if(c.to===zone.dataset.zid) good(el,zone,c); else bad(el,zone,c);
+}
+function good(el,zone,c){
+  const q=S.cur.q; c.done=true; S.cur.placed++; S.streak++; S.best=Math.max(S.best,S.streak);
+  const pts=100+Math.min(50,(S.streak-1)*10); S.score+=pts;
+  const first=!c.missed; S.log.push({lv:q.lv,t:c.t,ok:first,fb:c.fb,title:q.title});
+  const isX=(c.to==='trash'||c.to==='no');
+  const chip=document.createElement('div'); chip.className='chip'+(isX?' x':''); chip.textContent=c.t; $('.zone-b',zone).appendChild(chip);
+  if(q.mode==='fish') (S.fish[c.to]=S.fish[c.to]||[]).push({t:c.t,x:isX});
+  el.remove(); zone.classList.add('good'); setTimeout(()=>zone.classList.remove('good'),600);
+  Snd.fx('good'); floatAt(zone,'+'+pts); hud();
+  if(first&&c.badge) award(c.badge);
+  if(S.streak>=5) award('combo');
+  if(S.cur.placed===q.cards.length) finishQ(c); else fb('ok','Tepat! +'+pts,c.fb);
+}
+function bad(el,zone,c){
+  c.missed=true; S.streak=0; S.cur.wrong++; S.lvMist[S.cur.q.lv]++; S.score=Math.max(0,S.score-30);
+  zone.classList.add('bad'); el.classList.add('nope'); setTimeout(()=>{zone.classList.remove('bad');el.classList.remove('nope')},400);
+  Snd.fx('bad'); floatAt(zone,'−30',true);
+  const r=loseHeart();
+  fb('bad','Belum tepat. −30 poin, −1 nyawa',c.h+(r?' Nyawa habis, diisi ulang, tapi bintang level ini maksimal 1.':''));
+}
+function finishQ(c){
+  clearInterval(S.tInt); S.locked=true; S.solved++;
+  let bonus=0; if(S.challenge&&S.tLeft>0){bonus=S.tLeft*2;S.score+=bonus}
+  fb('ok','Soal selesai!',c.fb+(bonus?' Bonus waktu +'+bonus+'.':''),LV[S.cur.q.lv].key);
+  Snd.fx('star'); hud();
+  if(S.solved*2>=Q.length) award('half');
+  const last=!Q[S.qi+1]||Q[S.qi+1].lv!==S.cur.q.lv;
+  const nb=$('#btnNext'); nb.textContent=last?'Selesaikan level':'Soal berikutnya'; nb.hidden=false; $('#btnHint').hidden=true;
+  setTimeout(()=>nb.scrollIntoView({block:'nearest',behavior:'smooth'}),180);
+}
+function levelEnd(l){
+  const m=S.lvMist[l], L=LV[l]; let st=m===0?3:(m<=2?2:1); if(S.refill[l]) st=1; S.stars[l]=st;
+  let bonus=0; if(m===0){bonus=150;S.score+=bonus;award('flawless')}
+  award(['fish','why','proof'][l]); hud();
+  const stars=[0,1,2].map(i=>'<svg class="'+(i<st?'on':'')+'"><use href="#i-star"/></svg>').join('');
+  setTimeout(()=>Snd.fx('level'),450);
+  modal('<div class="chip-tag">Level '+(l+1)+' selesai</div><h2>'+esc(L.title)+'</h2><div class="stars" aria-label="'+st+' bintang">'+stars+'</div>'+
+    '<p>'+(m===0?'Bersih tanpa salah. Bonus +150 poin.':'Kesalahan di level ini: '+m+'. Tiap kesalahan adalah bahan belajar untuk putaran berikutnya.')+(S.refill[l]?' Nyawa sempat habis, jadi bintang dibatasi 1.':'')+'</p>'+
+    '<p class="story"><b>Pesan kunci.</b> '+esc(L.key)+'</p><button class="btn big" id="mNext" type="button">'+(l<2?'Ke level berikutnya':'Lihat hasil misi')+'</button>');
+  $('#mNext').onclick=()=>{closeModal();Snd.fx('click');if(l<2){S.qi++;hud();levelIntro(l+1);window.scrollTo({top:0})}else finish()};
+}
+
+/* ---- drag & drop (pointer events: mouse, touch, pen) + ketuk-untuk-pilih ---- */
+let drag=null,suppress=false;
+const zoneAt=(x,y)=>{const e=document.elementFromPoint(x,y);return e&&e.closest?e.closest('.zone'):null};
+function deselect(){if(S.sel)S.sel.classList.remove('sel');S.sel=null;$('#stage').classList.remove('armed')}
+function toggleSelect(el){
+  if(S.locked) return;
+  if(S.sel===el){deselect();return}
+  deselect(); S.sel=el; el.classList.add('sel'); $('#stage').classList.add('armed'); Snd.fx('pick');
+}
+document.addEventListener('pointerdown',e=>{
+  const c=e.target.closest&&e.target.closest('.card[data-cid]:not(.ghost)');
+  if(!c||S.locked||(e.pointerType==='mouse'&&e.button!==0)) return;
+  const r=c.getBoundingClientRect();
+  drag={el:c,sx:e.clientX,sy:e.clientY,ox:e.clientX-r.left,oy:e.clientY-r.top,w:r.width,moved:false,ghost:null,zone:null};
+});
+document.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  if(!drag.moved){
+    if(Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<7) return;
+    drag.moved=true; deselect(); Snd.fx('pick');
+    const g=drag.el.cloneNode(true); g.classList.add('ghost'); g.removeAttribute('tabindex'); g.style.width=drag.w+'px'; document.body.appendChild(g);
+    drag.ghost=g; drag.el.classList.add('lifted'); $('#stage').classList.add('armed');
+  }
+  drag.ghost.style.transform='translate('+(e.clientX-drag.ox)+'px,'+(e.clientY-drag.oy)+'px) rotate(-3deg)';
+  const z=zoneAt(e.clientX,e.clientY);
+  if(z!==drag.zone){if(drag.zone)drag.zone.classList.remove('over');if(z)z.classList.add('over');drag.zone=z}
+  if(e.clientY<100) window.scrollBy(0,-14); else if(e.clientY>innerHeight-100) window.scrollBy(0,14);
+});
+function endDrag(cancel){
+  if(!drag) return; const d=drag; drag=null;
+  if(d.moved){
+    d.ghost.remove(); d.el.classList.remove('lifted'); $('#stage').classList.remove('armed');
+    if(d.zone) d.zone.classList.remove('over');
+    suppress=true; setTimeout(()=>{suppress=false},0);
+    if(d.zone&&!cancel) drop(d.el,d.zone);
+  } else if(!cancel) toggleSelect(d.el);
+}
+document.addEventListener('pointerup',()=>endDrag(false));
+document.addEventListener('pointercancel',()=>endDrag(true));
+document.addEventListener('click',e=>{
+  if(suppress||!S.sel) return;
+  const z=e.target.closest&&e.target.closest('.zone');
+  if(z){const c=S.sel;deselect();drop(c,z)}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'&&e.key!==' ') return;
+  const t=e.target; if(!t.closest) return;
+  const c=t.closest('.card[data-cid]'), z=t.closest('.zone');
+  if(c){e.preventDefault();toggleSelect(c)}
+  else if(z&&S.sel){e.preventDefault();const s=S.sel;deselect();drop(s,z)}
+});
+
+/* ---- hasil akhir ---- */
+function finish(){
+  clearInterval(S.tInt); S.locked=true;
+  const okN=S.log.filter(x=>x.ok).length, acc=Math.round(okN/TOTAL_CARDS*100);
+  if(acc>=85) award('detective');
+  const tier=acc>=85?3:(acc>=70?2:1), pass=tier>=2;
+  const title=['','Calon Detektif','Problem Solver Handal','Detektif Akar Masalah'][tier];
+  const skills=[0,1,2].map(l=>{const a=S.log.filter(x=>x.lv===l);return{n:['Fishbone 6M','Rantai 5 Why','Validasi & tindakan'][l],p:a.length?Math.round(a.filter(x=>x.ok).length/a.length*100):0}});
+  const starsTot=S.stars.reduce((a,b)=>a+b,0), nm=esc(S.name);
+  const msg=[ '',
+    '<h3>Belum sampai target 70%, tapi misimu tuntas.</h3><p>'+nm+', kamu menyelesaikan seluruh soal, dan itu langkah yang sungguh berharga. Hasil yang belum tercapai bukan kegagalan; itu informasi untuk putaran berikutnya. Baca umpan balik di bawah, lalu coba lagi. Detektif hebat belajar dari kartu yang meleset.</p>',
+    '<h3>Target tercapai! Dasar RCA-mu kuat.</h3><p>'+nm+', kamu sudah membedakan penyebab dari tuduhan dan meminta bukti di tiap langkah. Satu putaran lagi dan kamu bisa mengejar gelar Detektif Akar Masalah. Cek kartu yang sempat meleset di umpan balik.</p>',
+    '<h3>Luar biasa, kamu Detektif Akar Masalah!</h3><p>'+nm+', kamu menelusuri masalah dengan fakta, bukan dugaan. Bawa kebiasaan ini ke lantai produksi: tanya "mengapa", minta bukti, dan periksa sistem sebelum menuduh orang.</p>'][tier];
+  const bdg=BADGES.map(b=>{const g=S.badges.has(b.id);return '<div class="bdg'+(g?'':' lock')+'"><svg style="color:'+b.c+'"><use href="#i-badge"/></svg><b>'+esc(b.n)+'</b><span>'+esc(b.d)+'</span></div>'}).join('');
+  const lvc=LV.map((L,i)=>'<div class="inner"><h4>Level '+(i+1)+' · '+esc(L.tool)+'</h4><div class="stars">'+[0,1,2].map(k=>'<svg class="'+(k<S.stars[i]?'on':'')+'"><use href="#i-star"/></svg>').join('')+'</div><span class="muted" style="font-size:12.5px">Kesalahan: '+S.lvMist[i]+'</span></div>').join('');
+  const sk=skills.map(s=>'<div class="skill"><span>'+s.n+'</span><div class="pbar"><div class="pfill" style="width:'+s.p+'%"></div></div><b>'+s.p+'%</b></div>').join('');
+  const logs=LV.map((L,l)=>{
+    const a=S.log.filter(x=>x.lv===l), g=a.filter(x=>x.ok).length;
+    return '<details class="lg"'+(l===0?' open':'')+'><summary>Level '+(l+1)+' · '+esc(L.tool)+' ('+g+' dari '+a.length+' benar di percobaan pertama)</summary>'+
+      a.map(x=>'<div class="lgi"><span class="mk '+(x.ok?'y':'n')+'">'+(x.ok?'✓':'!')+'</span><div><b>'+esc(x.t)+'</b><small>'+(x.ok?'Benar di percobaan pertama. ':'Sempat meleset. ')+esc(x.fb)+'</small></div></div>').join('')+'</details>';
+  }).join('');
+  $('#s-result').innerHTML=
+   '<div class="glass"><div class="rtop"><div class="ring" style="--p:'+acc+'"><div><b>'+acc+'%</b><span>akurasi</span></div></div><div class="rtitle" style="display:flex;flex-direction:column;gap:8px;align-items:inherit"><div class="chip-tag">'+(pass?'Target tercapai':'Belum mencapai target 70%')+'</div><h2>'+title+'</h2><p class="muted">Laporan misi untuk '+nm+'</p></div></div></div>'+
+   '<div class="glass"><div class="stats"><div class="inner stat"><b>'+S.score+'</b><span>Skor total</span></div><div class="inner stat"><b>'+starsTot+'/9</b><span>Bintang</span></div><div class="inner stat"><b>'+S.best+'x</b><span>Combo terbaik</span></div><div class="inner stat"><b>'+S.badges.size+'/'+BADGES.length+'</b><span>Lencana</span></div></div></div>'+
+   '<div class="pos'+(pass?'':' low')+'">'+msg+'</div>'+
+   '<div class="glass"><h3 class="sec">Hasil per level</h3><div class="lvcards">'+lvc+'</div></div>'+
+   '<div class="glass"><h3 class="sec">Kemampuan kamu</h3>'+sk+'</div>'+
+   '<div class="glass"><h3 class="sec">Lencana</h3><div class="badges">'+bdg+'</div></div>'+
+   '<div class="glass"><h3 class="sec">Rangkuman dua alat</h3><div class="recap"><div class="inner"><h4>Fishbone</h4><ol><li>Tulis masalah terukur di kepala ikan.</li><li>Tentukan kategori 6M.</li><li>Curah gagasan penyebab per kategori.</li><li>Tandai penyebab paling mungkin.</li><li>Kumpulkan bukti untuk memverifikasi.</li></ol></div><div class="inner"><h4>5 Why</h4><ol><li>Tulis pernyataan masalah.</li><li>Tanya "Mengapa?"</li><li>Jawab dengan fakta.</li><li>Ulangi pada jawaban.</li><li>Berhenti saat penyebab dapat diverifikasi dan dikendalikan.</li></ol></div></div><p class="story" style="margin-top:12px"><b>Pesan kunci.</b> Gunakan Fishbone untuk melebarkan pandangan, lalu gunakan data untuk mempersempit ke penyebab yang benar.</p></div>'+
+   '<div class="glass"><h3 class="sec">Umpan balik tiap jawaban</h3>'+logs+'</div>'+
+   '<div class="actions" style="justify-content:flex-start"><button class="btn big" id="btnAgain" type="button">Main lagi</button><button class="btn ghost" id="btnHome" type="button">Kembali ke awal</button></div>';
+  $('#btnAgain').onclick=()=>{Snd.fx('click');show('brief')};
+  $('#btnHome').onclick=()=>{Snd.fx('click');show('gate')};
+  show('result'); Snd.fx('win');
+  const res={source:'detektif-akar-masalah',type:'result',name:S.name,score:S.score,accuracy:acc,stars:starsTot,badges:[...S.badges],passed:pass,challenge:!!S.challenge};
+  window.__GAME_RESULT=res;
+  try{window.parent&&window.parent!==window&&window.parent.postMessage(res,'*')}catch(e){}
+}
+})();
+</script>
+
+</body>
+</html>
